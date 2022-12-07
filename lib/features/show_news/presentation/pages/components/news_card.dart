@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:news_app/features/show_news/presentation/pages/components/news_view_page.dart';
 
 import '../../../../core/constants/palette.dart';
+import '../../../domain/entities/news_info.dart';
 
 class NewsCard extends StatelessWidget {
-  const NewsCard({Key? key}) : super(key: key);
+  final NewsInfo newsInfo;
+  const NewsCard({Key? key, required this.newsInfo}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return const NewsViewPage();
+          return NewsViewPage(newsInfo: newsInfo);
         }));
       },
       child: Container(
@@ -23,10 +25,10 @@ class NewsCard extends StatelessWidget {
             Container(
               height: 260,
               color: Palette.lightGrey,
-              child: Image.network(
-                'https://img.freepik.com/premium-vector/apple-background-flat-illustration_598748-19.jpg?w=2000',
+              child: newsInfo.imageUrl != null ? Image.network(
+                newsInfo.imageUrl!,
                 fit: BoxFit.cover,
-              ),
+              ) : const SizedBox(),
             ),
             Positioned(
               left: 16,
@@ -41,13 +43,13 @@ class NewsCard extends StatelessWidget {
                     color: Colors.black12,
                   )
                 ]),
-                child: const Padding(
-                  padding: EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Center(
                     child: Text(
-                      'News title',
+                      newsInfo.title != null ? newsInfo.title! : '-- No title --',
                       maxLines: 2,
-                      style: TextStyle(
+                      style: const TextStyle(
                           overflow: TextOverflow.ellipsis,
                           color: Palette.deepBlue,
                           fontSize: 18,

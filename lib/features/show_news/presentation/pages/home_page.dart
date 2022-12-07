@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app/features/show_news/presentation/news_cubit/news_cubit.dart';
+import 'package:news_app/features/show_news/presentation/news_cubit/news_state.dart';
 import 'package:news_app/features/show_news/presentation/pages/components/news_card.dart';
 
 import '../../../core/constants/palette.dart';
@@ -13,7 +14,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
 
+    context.read<NewsCubit>().fetchNews(null);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +40,15 @@ class _HomePageState extends State<HomePage> {
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const TextField(
+            TextField(
+              onSubmitted: (searchText) {
+                context
+                    .read<NewsCubit>()
+                    .fetchNews(searchText.trim() == '' ? null : searchText);
+              },
               cursorColor: Palette.deepBlue,
-              style: TextStyle(color: Palette.deepBlue, fontSize: 14),
-              decoration: InputDecoration(
+              style: const TextStyle(color: Palette.deepBlue, fontSize: 14),
+              decoration: const InputDecoration(
                   prefixIcon: Icon(
                     Icons.search,
                     color: Palette.lightGrey,
@@ -53,30 +64,65 @@ class _HomePageState extends State<HomePage> {
                           BorderSide(width: 2, color: Palette.deepBlue))),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Top News',
-              style: TextStyle(
-                  color: Palette.deepBlue,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold),
-            ),
+            BlocBuilder<NewsCubit, NewsState>(builder: (context, state) {
+              if (state is NewsInitial) {
+                return const Text(
+                  'Top News',
+                  style: TextStyle(
+                      color: Palette.deepBlue,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                );
+              } else if (state is NewsInitialSearch) {
+                return const Text(
+                  'Searched News',
+                  style: TextStyle(
+                      color: Palette.deepBlue,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                );
+              } else {
+                return const SizedBox();
+              }
+            }),
             const SizedBox(height: 16),
             Expanded(
-                child: ListView.builder(
-                    itemCount: 10,
-                    itemBuilder: (context, index) {
-                      return NewsCard();
-                    }))
+              child:
+                  BlocBuilder<NewsCubit, NewsState>(builder: (context, state) {
+                if (state is NewsInitial) {
+                  return ListView.builder(
+                      itemCount: state.news.length,
+                      itemBuilder: (context, index) {
+                        return NewsCard(newsInfo: state.news[index]);
+                      });
+                } else if (state is NewsInitialSearch) {
+                  return ListView.builder(
+                      itemCount: state.news.length,
+                      itemBuilder: (context, index) {
+                        return NewsCard(newsInfo: state.news[index]);
+                      });
+                } else if (state is NewsLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Palette.deepBlue),
+                  );
+                } else {
+                  return Center(
+                    child: IconButton(
+                        onPressed: () {
+                          context.read<NewsCubit>().fetchNews(null);
+                        },
+                        icon: const Icon(
+                          Icons.replay_outlined,
+                          color: Palette.deepBlue,
+                          size: 24,
+                        )),
+                  );
+                }
+              }),
+            )
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    context.read<NewsCubit>().fetchNews(null);
   }
 }

@@ -17,6 +17,12 @@ class NewsCubit extends Cubit<NewsState> {
 
     final Either<Failure, List<NewsInfo>> fetchNewsResult = await _fetchNewsUseCase.fetchNews(searchText);
 
-    fetchNewsResult.fold((l) => emit(NewsError()), (r) => emit(NewsInitial(news: r)));
+    fetchNewsResult.fold((l) => emit(NewsError()), (r) {
+      if(searchText != null) {
+        emit(NewsInitialSearch(news: r));
+      } else {
+        emit(NewsInitial(news: r));
+      }
+    });
   }
 }
